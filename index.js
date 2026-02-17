@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const connectDB = require("./src/config/db")
 
 // initialize app
 const app = express();
@@ -8,6 +9,9 @@ const app = express();
 // middleware
 app.use(express.json()); // for persing json data
 app.use(cors()); // Frontend and Backend communication
+
+// Database connect
+connectDB();
 
 // basic routes for health test
 app.get("/", (req, res) => {
