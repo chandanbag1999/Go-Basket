@@ -3,6 +3,9 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./src/config/db")
 
+// import routes
+const userRoutes = require("./src/routes/userRoute");
+
 // initialize app
 const app = express();
 
@@ -20,6 +23,9 @@ app.get("/", (req, res) => {
         success: true,
     });
 });
+
+// user routes
+app.use("/api/v1/user", userRoutes);
 
 // server setup
 const PORT = process.env.PORT || 8080;
