@@ -1,126 +1,53 @@
 const User = require("../models/userModel");
-const argon2 = require("argon2");
 const jwt = require("jsonwebtoken");
+const otpService = require("../services/otpServices");
+const smsService = require("../services/smsServices");
 
-
-async function registerUser(req, res){
-    try {
-        // 1. collect data from user
-        const { name, email, password, role } = req.body;
-
-        // 2. Basic validation
-        if (!name || !email || !password) {
-            return res.status(400).json({
-                message: "All fields are required",
-                success: false
-            });
-        };
-
-        // 3. Check if user already exists
-        const userExists = await User.findOne({ email: email});
-
-        if(userExists){
-            return res.status(400).json({
-                message: "User already exists",
-                success: false
-            });
-        };
-
-        // 4. Hash password
-        const hashedPassword = await argon2.hash(password);
-
-        // 5. Create user
-        const newUser = await User({
-            name,
-            email,
-            password: hashedPassword,
-            role
-        });
-
-        // 6. Save user
-        await newUser.save();
-
-        // 7. Return response
-        return res.status(201).json({
-            message: "User registered successfully",
-            success: true,
-            user: {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-                role: newUser.role
-            }
-        });
-
-
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            message: "Internal server error",
-            success: false
-        });
-        
-    };
+// Helper function to generate JWT token
+function generateToken(userId, role) {
+    return jwt.sign(
+        { userId, role },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN}
+    )
 };
 
-async function loginUser(req, res) {
+// send OTP
+async function sendOTP(req, res) {
     try {
-        // 1. collect data from user
-        const { email, password } = req.body;
+        const { mobile } = req.body;
 
-        // 2. Basic validation
-        if (!email || !password) {
+        if (!mobile) {
             return res.status(400).json({
-                message: "Email and password are required",
-                success: false
-            });
-        }
-
-        // 3. Check if user exists
-        const user = await User.findOne({ email: email });
-
-        if (!user) {
-            return res.status(401).json({
-                message: "Invalid email or password",
+                message: "Mobile number is required",
                 success: false
             });
         };
 
-        // 4. verify password using Argon2
-        const isPasswordValid = await argon2.verify(user.password, password);
-
-        if (!isPasswordValid) {
-            return res.status(401).json({
-                message: "Invalid email or password",
+        // Indian mobile number format validation
+        const mobileRegex = /^[6-9]\d{9}$/;
+        if (!mobileRegex.test(mobile)) {
+            return res.status(400).json({
+                message: "Invalid mobile number",
                 success: false
             });
         };
 
-        // 5. Generate JWT token
-        const token = jwt.sign(
-            {
-                userId: user._id,
-                role: user.role
-            },
-            process.env.JWT_SECRET,
-            {
-                expiresIn: process.env.JWT_EXPIRES_IN
-            }
-        );
+        // otp genarate
+        const otp = otpService.generateOtp();
 
-        // 6. Return response
+        // save otp in redis
+        await otpService.saveOTP(mobile, otp);
+
+        // send otp to user
+        await smsService.sendOTPSms(mobile, otp);
+
         return res.status(200).json({
-            message: "User logged in successfully",
+            message: "OTP sent successfully",
             success: true,
-            token: token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role
-            },
-            
-        })
+            otp // remove this line in production
+        });
+
     } catch (error) {
         console.log(error);
         return res.status(500).json({
@@ -128,9 +55,126 @@ async function loginUser(req, res) {
             success: false
         });
     }
-}
+};
+
+
+// verify OTP 
+async function verifyOTP(req, res) {
+    try {
+        const { mobile, otp } = req.body;
+
+        if (!mobile || !otp) {
+            return res.status(400).json({
+                message: "Mobile number and OTP are required",
+                success: false
+            });
+        };
+
+        // verify otp from redis
+        const result = await otpService.verifyOTP(mobile, otp);
+
+        if (!result.valid) {
+            return res.status(400).json({
+                message: result.reason || "Invalid OTP",
+                success: false
+            });
+        };
+
+        // check user exist or not
+        const existingUser = await User.findOne({ mobile});
+
+        // existing user then login and return token
+        if (existingUser) {
+            const token = generateToken(existingUser._id, existingUser.role);
+
+            return res.status(200).json({
+                message: "Login successfully",
+                success: true,
+                isNewUser: false,
+                token,
+                user: {
+                    id: existingUser._id,
+                    firstName: existingUser.firstName,
+                    mobile: existingUser.mobile,
+                    role: existingUser.role
+                }
+            });
+        };
+
+        // new user then do not provide token.First collect userName
+        return res.status(200).json({
+            message: "OTP verified. Complete your profile.",
+            success: true,
+            isNewUser: true,
+            token: null
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false
+        });
+    };
+};
+
+
+// update user profile
+async function setUpProfile(req, res) {
+    try {
+        const { mobile, firstName } = req.body;
+
+        if (!mobile || !firstName) {
+            return res.status(400).json({
+                message: "Mobile number and first name are required",
+                success: false
+            });
+        };
+
+        // check user exist or not
+        const existingUser = await User.findOne({ mobile });
+
+        if (existingUser) {
+            return res.status(400).json({
+                message: "User already exist. Please login.",
+                success: false
+            });
+        };
+
+        // create new user
+        const newUser = new User({
+            mobile,
+            firstName: firstName.trim(),
+            role: "customer"
+        });
+
+        await newUser.save();
+
+        // generate token
+        const token = generateToken(newUser._id, newUser.role);
+
+        return res.status(201).json({
+            message: "Welcome to Go-Basket! 🛒",
+            success: true,
+            token,
+            user: {
+                id: newUser._id,
+                firstName: newUser.firstName,
+                mobile: newUser.mobile,
+                role: newUser.role
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false
+        });
+    }
+};
 
 module.exports = {
-    registerUser,
-    loginUser,
-}
+    sendOTP,
+    verifyOTP,
+    setUpProfile
+};

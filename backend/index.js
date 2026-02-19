@@ -25,7 +25,7 @@ app.get("/", (req, res) => {
 });
 
 // user routes
-app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/auth", userRoutes);
 
 // server setup
 const PORT = process.env.PORT || 8080;

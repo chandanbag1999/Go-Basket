@@ -1,26 +1,29 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    email: {
+    // primary identifier - mobile number
+    mobile: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        match: /^\d{10}$/,
+        trim: true
     },
-    password: {
+    // Only collected for NEW users after OTP verify
+    firstName: {
         type: String,
-        required: true
+        trim: true,
+        default: null
     },
     role: {
         type: String,
         enum: ['customer', 'delivery', 'admin'],
         default: 'customer'
     },
-    address: {
-        type: String
+    // Is profile fully set up?
+    isProfileComplete: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true
