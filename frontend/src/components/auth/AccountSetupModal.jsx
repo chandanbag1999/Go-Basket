@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { setupProfile } from "../../services/authApi";
+import { setCredentials } from "../../store/slices/authSlice";
 
 const AccountSetupModal = ({ mobile, onComplete }) => {
+    const dispatch = useDispatch();
     const [firstName, setFirstName] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -13,9 +16,8 @@ const AccountSetupModal = ({ mobile, onComplete }) => {
         setError("");
         try {
             const result = await setupProfile(mobile, firstName.trim());
-            // Save JWT and user info
-            localStorage.setItem("token", result.token);
-            localStorage.setItem("user", JSON.stringify(result.user));
+            // Dispatch to Redux — authSlice also syncs localStorage
+            dispatch(setCredentials({ user: result.user, token: result.token }));
             onComplete?.();
         } catch (err) {
             setError(err.message || "Something went wrong. Please try again.");
@@ -48,7 +50,6 @@ const AccountSetupModal = ({ mobile, onComplete }) => {
                         className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-sky-300 transition mb-4"
                     />
 
-                    {/* Error */}
                     {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
 
                     <div className="mb-12" />

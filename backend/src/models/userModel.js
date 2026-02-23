@@ -15,6 +15,23 @@ const userSchema = new mongoose.Schema({
         trim: true,
         default: null
     },
+    lastName: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    email: {
+        type: String,
+        unique: true,
+        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        sparse: true,
+        trim: true,
+        default: null,
+    },
+    avatar: {
+        type: String,
+        default: null
+    },
     role: {
         type: String,
         enum: ['customer', 'delivery', 'admin'],
@@ -24,6 +41,33 @@ const userSchema = new mongoose.Schema({
     isProfileComplete: {
         type: Boolean,
         default: false
+    },
+
+    // - Delivery Partner specific -
+    deliveryInfo: {
+        vehicalType: {
+            type: String,
+            enum: ['bicycle', 'bike', 'scooter']
+        },
+        licensePlate: String,
+        isAvailable: {
+            type: Boolean,
+            default: false
+        },
+        currentLocation: {
+            lat: Number,
+            lng: Number
+        }
+    },
+
+    // ── Account management ──
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    isVerified: {
+        type: Boolean,
+        default: false    // Admin manually verifies delivery partners
     }
 }, {
     timestamps: true

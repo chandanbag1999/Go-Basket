@@ -1,20 +1,64 @@
-import { useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { selectIsLoggedIn, logout as logoutAction } from "./store/slices/authSlice";
+import { logoutUser } from "./services/authApi";
+
+// Pages
 import Home from "./pages/Home";
-import LoginModal from "./components/auth/LoginModal";
+import SignIn from "./pages/SignIn";
+import Cart from "./pages/Cart";
+import Orders from "./pages/Orders";
+import TrackOrder from "./pages/TrackOrder";
+import Profile from "./pages/Profile";
+import NotFound from "./pages/NotFound";
+
+// Components
+import ProtectedRoute from "./components/common/ProtectedRoute";
 
 function App() {
-  const [showLogin, setShowLogin] = useState(false);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const dispatch = useDispatch();
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (err) {
+      // ignore — even if API fails, clear local state
+    }
+    dispatch(logoutAction());
+  };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Home page is always rendered as base */}
-      <Home onLoginClick={() => setShowLogin(true)} />
+    <BrowserRouter>
+      <Routes>
+        {/* ── Public Routes ─────────────────────────── */}
+        <Route
+          path="/"
+          element={
+            <Home
+              isLoggedIn={isLoggedIn}
+              onLogout={handleLogout}
+            />
+          }
+        />
+        <Route path="/sign-in" element={<SignIn />} />
 
-      {/* Login modal overlays on top when triggered */}
-      {showLogin && (
-        <LoginModal onClose={() => setShowLogin(false)} />
-      )}
-    </div>
+        {/* ── Customer Routes (login required, customer role) ── */}
+        <Route element={<ProtectedRoute role="customer" />}>
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:orderId/track" element={<TrackOrder />} />
+        </Route>
+
+        {/* ── Any logged-in user can access profile ── */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+
+        {/* ── 404 ───────────────────────────────────── */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

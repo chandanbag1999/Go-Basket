@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import OTPModal from "./OTPModal";
 import AccountSetupModal from "./AccountSetupModal";
 import { sendOtp } from "../../services/authApi";
+import { setCredentials } from "../../store/slices/authSlice";
 
 const LoginModal = ({ onClose }) => {
+    const dispatch = useDispatch();
     const [mobile, setMobile] = useState("");
     const [step, setStep] = useState("login"); // "login" | "otp" | "setup"
     const [loading, setLoading] = useState(false);
@@ -33,9 +36,8 @@ const LoginModal = ({ onClose }) => {
                     if (result.isNewUser) {
                         setStep("setup");
                     } else {
-                        // Existing user — save token and go home
-                        localStorage.setItem("token", result.token);
-                        localStorage.setItem("user", JSON.stringify(result.user));
+                        // Existing user — dispatch to Redux store
+                        dispatch(setCredentials({ user: result.user, token: result.token }));
                         onClose();
                     }
                 }}
@@ -56,7 +58,6 @@ const LoginModal = ({ onClose }) => {
         <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50">
             <div className="relative bg-white rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.12)] w-full max-w-sm px-8 py-10 mx-4">
 
-                {/* Close */}
                 <button
                     onClick={onClose}
                     className="absolute top-4 left-5 text-sky-500 hover:text-sky-700 transition-colors text-xl font-light leading-none"
@@ -81,10 +82,8 @@ const LoginModal = ({ onClose }) => {
                         />
                     </div>
 
-                    {/* Error */}
                     {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
 
-                    {/* Terms */}
                     <p className="text-[11px] text-gray-400 mb-4 leading-relaxed">
                         By <span className="text-sky-500 cursor-pointer hover:underline">signing in</span>, you agree to our{" "}
                         <span className="text-sky-500 cursor-pointer hover:underline">Terms and Conditions of Use</span> and{" "}
