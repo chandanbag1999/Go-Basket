@@ -15,8 +15,8 @@ const Header = ({ onLogout }) => {
     return (
         <header className="w-full bg-[#0d7ab5]">
 
-            {/* ── Desktop Row (single row on md+) ─────────────── */}
-            <div className="flex items-center gap-4 px-4 py-2.5 md:px-6">
+            {/* ── Desktop Row ─────────────────────────────────── */}
+            <div className="flex items-center justify-between px-4 py-2.5 lg:px-[268px]">
 
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-2 shrink-0">
@@ -51,8 +51,8 @@ const Header = ({ onLogout }) => {
                     </button>
                 </div>
 
-                {/* Search Bar — desktop (md+) */}
-                <div className="hidden md:flex flex-1 items-center bg-[#0b6a9e] rounded-full px-4 py-2 gap-2 min-w-0">
+                {/* Search Bar — desktop (lg+) */}
+                <div className="hidden lg:flex flex-1 mx-6 max-w-md items-center bg-[#0b6a9e] rounded-full px-4 py-2 gap-2 min-w-0">
                     <Search size={16} className="text-white/50 shrink-0" />
                     <input
                         type="text"
@@ -63,11 +63,8 @@ const Header = ({ onLogout }) => {
                     />
                 </div>
 
-                {/* Spacer (mobile: pushes right icons to the end) */}
-                <div className="flex-1 md:hidden" />
-
                 {/* Right Section */}
-                <div className="flex items-center gap-4 shrink-0">
+                <div className="flex items-center gap-5 shrink-0">
 
                     {/* List/Menu icon */}
                     <button className="hidden sm:flex text-white/80 hover:text-white transition-colors">
@@ -117,7 +114,7 @@ const Header = ({ onLogout }) => {
             </div>
 
             {/* ── Mobile Row 2: Search + Toggle ─────────────── */}
-            <div className="md:hidden px-4 pb-3 flex flex-col gap-2">
+            <div className="lg:hidden px-4 pb-3 flex flex-col gap-2">
                 {/* Search bar */}
                 <div className="flex items-center bg-[#0b6a9e] rounded-full px-4 py-2.5 gap-2">
                     <Search size={15} className="text-white/50 shrink-0" />

@@ -1,1 +1,24 @@
 @import "tailwindcss";
+
+/* Hide scrollbar for horizontally-scrollable areas */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Subtle glow pulse on promo headline */
+@keyframes promoGlow {
+
+    0%,
+    100% {
+        text-shadow: 0 2px 8px rgba(198, 40, 40, 0.15);
+    }
+
+    50% {
+        text-shadow: 0 2px 22px rgba(198, 40, 40, 0.45), 0 0 6px rgba(198, 40, 40, 0.2);
+    }
+}
