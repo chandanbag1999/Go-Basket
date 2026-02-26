@@ -148,13 +148,11 @@ const Dots = ({ total, active, onDot }) => (
 );
 
 /* ── Carousel wrapper ─────────────────────────────────────── */
-const CARDS_PER_PAGE = 3;
-const TOTAL_PAGES = Math.ceil(allCards.length / CARDS_PER_PAGE);
-const AUTO_INTERVAL = 3500;
-
-const FashionCard = () => {
+const FashionCard = ({ cards = allCards, renderCard = (c, key) => <Card key={key} card={c} />, cardsPerPage = 3, showDots = true }) => {
+    const totalPages = Math.ceil(cards.length / cardsPerPage);
+    const AUTO_INTERVAL = 3500;
     const [page, setPage] = useState(0);
-    const [animDir, setAnimDir] = useState(null); // "left" | "right"
+    const [animDir, setAnimDir] = useState(null);
     const [isAnimating, setIsAnimating] = useState(false);
     const timerRef = useRef(null);
 
@@ -169,13 +167,13 @@ const FashionCard = () => {
     }, [isAnimating]);
 
     const prev = () => {
-        const next = (page - 1 + TOTAL_PAGES) % TOTAL_PAGES;
+        const next = (page - 1 + totalPages) % totalPages;
         goTo(next, "right");
     };
     const next = useCallback(() => {
-        const nextPage = (page + 1) % TOTAL_PAGES;
+        const nextPage = (page + 1) % totalPages;
         goTo(nextPage, "left");
-    }, [page, goTo]);
+    }, [page, goTo, totalPages]);
 
     /* auto-slide */
     useEffect(() => {
@@ -183,7 +181,7 @@ const FashionCard = () => {
         return () => clearInterval(timerRef.current);
     }, [next]);
 
-    const visibleCards = allCards.slice(page * CARDS_PER_PAGE, page * CARDS_PER_PAGE + CARDS_PER_PAGE);
+    const visibleCards = cards.slice(page * cardsPerPage, page * cardsPerPage + cardsPerPage);
 
     return (
         <div className="px-4 lg:px-[268px] bg-gray-50 pb-6" style={{ paddingTop: "38px" }}>
@@ -205,7 +203,7 @@ const FashionCard = () => {
                         transition: "opacity 0.35s ease, transform 0.35s ease",
                     }}
                 >
-                    {visibleCards.map((card, i) => <Card key={`${page}-${i}`} card={card} />)}
+                    {visibleCards.map((card, i) => renderCard(card, `${page}-${i}`))}
                 </div>
 
                 {/* Right arrow — hidden until card row is hovered */}
@@ -214,10 +212,12 @@ const FashionCard = () => {
                 </div>
             </div>
 
-            {/* Dots only — centred below the row */}
-            <div className="flex justify-center mt-4">
-                <Dots total={TOTAL_PAGES} active={page} onDot={(i) => goTo(i, i > page ? "left" : "right")} />
-            </div>
+            {/* Dots — hidden when showDots=false */}
+            {showDots && (
+                <div className="flex justify-center mt-4">
+                    <Dots total={totalPages} active={page} onDot={(i) => goTo(i, i > page ? "left" : "right")} />
+                </div>
+            )}
         </div>
     );
 };

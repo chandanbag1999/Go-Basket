@@ -1,100 +1,43 @@
 import { useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, Plus } from "lucide-react";
 
-const products = [
-    {
-        emoji: "🔌",
-        name: "Ambrane 67 Watt GAN Charger, Dual Ports Type ...",
-        price: 1799,
-        original: 4999,
-        off: 64,
-        bg: "#f0f4ff",
-    },
-    {
-        emoji: "🎧",
-        name: "Redmi Buds 5A, Active Noise Cancelling True...",
-        price: 999,
-        original: 2999,
-        off: 66,
-        bg: "#f5f5f5",
-    },
-    {
-        emoji: "🔋",
-        name: "boAt EnergyShroom PB331 MagnaCharge, 10000 mA...",
-        price: 1399,
-        original: 4499,
-        off: 68,
-        bg: "#f0f0f0",
-    },
-    {
-        emoji: "🎵",
-        name: "boAt Airdopes 138 with 60 HRS Playback, ASAP...",
-        price: 899,
-        original: 2990,
-        off: 69,
-        bg: "#f5f5f5",
-    },
-    {
-        emoji: "🪫",
-        name: "Hammer Ultra Charge Y20 20000 mAh 22.5 W Power...",
-        price: 899,
-        original: 2499,
-        off: 64,
-        bg: "#f0f4ff",
-    },
-    {
-        emoji: "🔋",
-        name: "Stuffcool Nuevo 25 W Type A + Type C GaN Mobile Fa...",
-        price: 599,
-        original: 1799,
-        off: 66,
-        bg: "#f5f5f5",
-    },
-    {
-        emoji: "📱",
-        name: "Samsung 25W Super Fast Charging USB Type-C...",
-        price: 799,
-        original: 1999,
-        off: 60,
-        bg: "#e8f5e9",
-    },
-    {
-        emoji: "🖱️",
-        name: "Logitech M235 Wireless Mouse, 2.4 GHz with USB...",
-        price: 699,
-        original: 1795,
-        off: 61,
-        bg: "#fff3e0",
-    },
-];
+/**
+ * Reusable product section.
+ *
+ * Props:
+ *   title       {string}   – section heading (supports pipe-separated subtitles)
+ *   products    {Array}    – array of product objects:
+ *                           { emoji, name, price, original, off, bg, sponsored? }
+ *   showQuickAdd {boolean} – show the green + quick-add button on image (default false)
+ *   viewAll     {string}   – optional "View All" href (default "#")
+ */
 
 const SCROLL_AMOUNT = 700;
 
-const ElectronicsZoneSection = () => {
+const ProductSection = ({ title, products = [], showQuickAdd = false, viewAll = "#", titleColor = "#111827", sectionBg = "#ffffff" }) => {
     const scrollRef = useRef(null);
     const [loved, setLoved] = useState({});
+    const [added, setAdded] = useState({});
 
-    const scroll = (dir) => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollBy({ left: dir === "left" ? -SCROLL_AMOUNT : SCROLL_AMOUNT, behavior: "smooth" });
-        }
-    };
+    const scroll = (dir) =>
+        scrollRef.current?.scrollBy({ left: dir === "left" ? -SCROLL_AMOUNT : SCROLL_AMOUNT, behavior: "smooth" });
 
-    const toggleLove = (i) => setLoved((prev) => ({ ...prev, [i]: !prev[i] }));
+    const toggleLove = (i) => setLoved((p) => ({ ...p, [i]: !p[i] }));
+    const handleAdd = (i) => setAdded((p) => ({ ...p, [i]: true }));
 
     return (
-        <div className="px-4 lg:px-[268px] bg-white pt-6 pb-4 mt-5">
-            {/* ── Section header ─────────────────────────────────── */}
+        <div className="px-4 lg:px-[268px] pt-6 pb-4 mt-5" style={{ background: sectionBg }}>
+            {/* ── Header ───────────────────────────────────────────── */}
             <div className="flex items-center justify-between mb-4">
-                <h2 className="font-black text-gray-900" style={{ fontSize: "22px" }}>
-                    Electronics Zone &nbsp;<span className="font-bold text-gray-700">|</span>&nbsp; Up To 10% Off &nbsp;<span className="font-bold text-gray-700">|</span>&nbsp; Code Tech100
+                <h2 className="font-black" style={{ fontSize: "22px", color: titleColor }}>
+                    {title}
                 </h2>
-                <button className="font-bold text-blue-600 hover:underline shrink-0 ml-4" style={{ fontSize: "14px" }}>
+                <a href={viewAll} className="font-bold text-blue-600 hover:underline shrink-0 ml-4" style={{ fontSize: "14px" }}>
                     View All
-                </button>
+                </a>
             </div>
 
-            {/* ── Scrollable row + arrows ─────────────────────────── */}
+            {/* ── Scrollable row ────────────────────────────────────── */}
             <div className="relative group">
                 {/* Left arrow */}
                 <button
@@ -108,7 +51,7 @@ const ElectronicsZoneSection = () => {
                     <ChevronLeft size={18} className="text-blue-500" />
                 </button>
 
-                {/* Product cards */}
+                {/* Cards */}
                 <div
                     ref={scrollRef}
                     className="flex gap-4 overflow-x-auto pb-2"
@@ -120,21 +63,35 @@ const ElectronicsZoneSection = () => {
                             className="shrink-0 flex flex-col rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow"
                             style={{ width: "160px" }}
                         >
-                            {/* Image area */}
+                            {/* Image */}
                             <div
                                 className="relative flex items-center justify-center rounded-t-2xl"
                                 style={{ height: "140px", background: p.bg }}
                             >
+                                {p.sponsored && (
+                                    <span
+                                        className="absolute top-2 left-2 bg-gray-200 text-gray-500 font-semibold rounded px-1.5 py-0.5"
+                                        style={{ fontSize: "9px" }}
+                                    >
+                                        Sponsored
+                                    </span>
+                                )}
+
                                 <span style={{ fontSize: "60px" }}>{p.emoji}</span>
-                                <button
-                                    onClick={() => toggleLove(i)}
-                                    className="absolute top-2 right-2 p-1 rounded-full transition-colors"
-                                >
-                                    <Heart
-                                        size={18}
-                                        className={loved[i] ? "fill-red-500 text-red-500" : "text-gray-300 hover:text-red-400"}
-                                    />
+
+                                <button onClick={() => toggleLove(i)} className="absolute top-2 right-2 p-1">
+                                    <Heart size={18} className={loved[i] ? "fill-red-500 text-red-500" : "text-gray-300 hover:text-red-400"} />
                                 </button>
+
+                                {showQuickAdd && (
+                                    <button
+                                        onClick={() => handleAdd(i)}
+                                        className="absolute bottom-2 left-2 flex items-center justify-center rounded"
+                                        style={{ width: "22px", height: "22px", background: added[i] ? "#2e7d32" : "#43a047" }}
+                                    >
+                                        <Plus size={14} className="text-white" strokeWidth={3} />
+                                    </button>
+                                )}
                             </div>
 
                             {/* Info */}
@@ -183,4 +140,4 @@ const ElectronicsZoneSection = () => {
     );
 };
 
-export default ElectronicsZoneSection;
+export default ProductSection;
